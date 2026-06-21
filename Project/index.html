@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Library Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink: #0f0f12;
+    --paper: #f7f5f0;
+    --accent: #1a3a5c;
+    --gold: #c8922a;
+    --gold-light: #f0d9a8;
+    --green: #1a7a4a;
+    --red: #c0392b;
+    --mid: #6b6b75;
+    --border: #d8d5ce;
+    --card: #ffffff;
+    --shadow: 0 2px 12px rgba(15,15,18,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(26,58,92,.3);
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    letter-spacing: .02em;
+  }
+  header .sub { font-size: .72rem; opacity: .6; font-family: 'Inter'; font-weight: 400; margin-left: .5rem; }
+
+  .stat-pills { display: flex; gap: .5rem; }
+  .pill {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: .72rem;
+    font-family: 'JetBrains Mono';
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-t { background: var(--gold); }
+  .dot-a { background: #4be0a0; }
+  .dot-i { background: #f08080; }
+
+  /* SERVER STATUS */
+  .server-bar {
+    background: #fff3cd;
+    border-bottom: 1px solid #ffc107;
+    padding: .5rem 2rem;
+    font-size: .78rem;
+    color: #856404;
+    align-items: center;
+    gap: .5rem;
+    display: none;
+  }
+  .server-bar.show { display: flex; }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 64px); }
+
+  /* SIDEBAR */
+  nav.sidebar {
+    background: #fff;
+    border-right: 1px solid var(--border);
+    padding: 1.25rem 0;
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+  .nav-label {
+    font-size: .66rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--mid);
+    padding: .75rem 1.25rem .3rem;
+    font-weight: 600;
+  }
+  nav button {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: .6rem 1.25rem;
+    font-family: 'Inter';
+    font-size: .82rem;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    border-left: 3px solid transparent;
+    transition: all .15s;
+    font-weight: 500;
+  }
+  nav button:hover { background: var(--paper); }
+  nav button.active {
+    background: #eef3f9;
+    color: var(--accent);
+    border-left-color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* MAIN */
+  main { padding: 2rem; overflow-y: auto; }
+  .page { display: none; }
+  .page.active { display: block; animation: fadeUp .2s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--accent);
+    margin-bottom: .2rem;
+  }
+  .page-desc { color: var(--mid); font-size: .8rem; margin-bottom: 1.5rem; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+  }
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* FORM */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .9rem; }
+  .field label { font-size: .72rem; font-weight: 600; color: var(--mid); text-transform: uppercase; letter-spacing: .06em; }
+  .field input {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .55rem .75rem;
+    font-family: 'Inter';
+    font-size: .88rem;
+    color: var(--ink);
+    background: #fff;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,58,92,.08); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    border: none;
+    border-radius: 6px;
+    padding: .55rem 1.2rem;
+    font-family: 'Inter';
+    font-size: .84rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #163050; }
+  .btn-gold { background: var(--gold); color: #fff; }
+  .btn-gold:hover:not(:disabled) { background: #a8771f; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: #a93226; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--ink); }
+  .btn-ghost:hover:not(:disabled) { background: var(--paper); }
+  .btn-sm { padding: .3rem .7rem; font-size: .74rem; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+  thead { background: var(--accent); color: #fff; }
+  thead th { padding: .7rem 1rem; text-align: left; font-weight: 600; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f0f4f9; }
+  tbody td { padding: .65rem 1rem; vertical-align: middle; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono';
+  }
+  .badge-avail  { background: #d4f5e6; color: #145a32; }
+  .badge-issued { background: #fde8e8; color: #922b21; }
+  .badge-wait   { background: var(--gold-light); color: #7b5800; }
+
+  .id-chip {
+    background: #eef3f9;
+    color: var(--accent);
+    font-family: 'JetBrains Mono';
+    font-size: .75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .action-group { display: flex; gap: .3rem; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-card .num {
+    font-family: 'JetBrains Mono';
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .stat-card .lbl { font-size: .72rem; color: var(--mid); margin-top: .4rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; }
+  .num-total  { color: var(--accent); }
+  .num-avail  { color: var(--green); }
+  .num-issued { color: var(--red); }
+
+  /* HISTORY */
+  .stack-list { display: flex; flex-direction: column; gap: .5rem; max-height: 500px; overflow-y: auto; }
+  .stack-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .7rem;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .65rem .9rem;
+    font-size: .82rem;
+  }
+  .stack-item:first-child { border-left: 3px solid var(--gold); background: #fffdf7; }
+  .arrow { color: var(--gold); font-family: 'JetBrains Mono'; font-weight: 700; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 3rem; color: var(--mid); }
+  .empty .ico { font-size: 2.5rem; display: block; margin-bottom: .75rem; }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; gap: .6rem; color: var(--mid); font-size: .85rem; padding: 1rem 0; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* WAITLIST PREVIEW */
+  .wl-preview { font-size: .72rem; color: var(--mid); font-family: 'JetBrains Mono'; margin-top: .25rem; }
+
+  /* MODAL */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,15,18,.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.75rem;
+    width: 420px;
+    max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    animation: popIn .2s ease;
+  }
+  @keyframes popIn { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: .5rem; color: var(--accent); }
+  .modal p  { font-size: .82rem; color: var(--mid); margin-bottom: 1rem; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+
+  /* TOAST */
+  #toasts { position: fixed; bottom: 1.5rem; right: 1.5rem; display: flex; flex-direction: column; gap: .5rem; z-index: 999; }
+  .toast {
+    background: var(--ink);
+    color: #fff;
+    padding: .7rem 1.1rem;
+    border-radius: 8px;
+    font-size: .82rem;
+    max-width: 340px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    animation: slideIn .25s ease;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .toast.success { background: var(--green); }
+  .toast.error   { background: var(--red); }
+  .toast.info    { background: var(--accent); }
+  .toast.warn    { background: var(--gold); }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.sidebar { display: none; }
+    .form-row, .form-row.three { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SERVER WARNING BAR -->
+<div class="server-bar" id="server-bar">
+  ⚠️ Java backend not reachable at <strong>localhost:8080</strong>. Start the Spring Boot server first — see README.md
+</div>
+
+<!-- HEADER -->
+<header>
+  <h1>📚 Library Management System <span class="sub">Spring Boot + HTML</span></h1>
+  <div class="stat-pills">
+    <div class="pill"><span class="dot dot-t"></span><span id="hdr-t">–</span> Total</div>
+    <div class="pill"><span class="dot dot-a"></span><span id="hdr-a">–</span> Available</div>
+    <div class="pill"><span class="dot dot-i"></span><span id="hdr-i">–</span> Issued</div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-label">Catalog</div>
+    <button class="active" onclick="go('add')"     id="nav-add">➕ Add Book</button>
+    <button onclick="go('display')"  id="nav-display">📋 All Books</button>
+    <button onclick="go('search')"   id="nav-search">🔍 Search Book</button>
+    <button onclick="go('sort')"     id="nav-sort">🔤 Sort (Bubble Sort)</button>
+
+    <div class="nav-label">Circulation</div>
+    <button onclick="go('issue')"    id="nav-issue">📤 Issue Book</button>
+    <button onclick="go('return')"   id="nav-return">📥 Return Book</button>
+
+    <div class="nav-label">Admin</div>
+    <button onclick="go('update')"   id="nav-update">✏️ Update Book</button>
+    <button onclick="go('remove')"   id="nav-remove">🗑️ Remove Book</button>
+    <button onclick="go('stats')"    id="nav-stats">📊 Statistics</button>
+    <button onclick="go('history')"  id="nav-history">📜 History Stack</button>
+  </nav>
+
+  <!-- PAGES -->
+  <main>
+
+    <!-- ADD -->
+    <div class="page active" id="page-add">
+      <div class="page-title">Add New Book</div>
+      <div class="page-desc">Appends a new node to the Linked List catalog.</div>
+      <div class="card">
+        <h3>Book Details</h3>
+        <div class="form-row three">
+          <div class="field"><label>Book ID</label>    <input type="number" id="a-id"     placeholder="e.g. 101"/></div>
+          <div class="field"><label>Title</label>      <input type="text"   id="a-title"  placeholder="e.g. Clean Code"/></div>
+          <div class="field"><label>Author</label>     <input type="text"   id="a-author" placeholder="e.g. Robert C. Martin"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="addBook()">➕ Add Book</button>
+      </div>
+    </div>
+
+    <!-- DISPLAY -->
+    <div class="page" id="page-display">
+      <div class="page-title">All Books</div>
+      <div class="page-desc">Traverses the entire linked list and displays all nodes.</div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div id="all-books-wrap"></div>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="page" id="page-search">
+      <div class="page-title">Search Book</div>
+      <div class="page-desc">Traverses linked list to find a node by Book ID.</div>
+      <div class="card">
+        <h3>Search by Book ID</h3>
+        <div style="display:flex;gap:.75rem;align-items:flex-end;">
+          <div class="field" style="flex:1;margin:0;"><label>Book ID</label><input type="number" id="s-id" placeholder="Enter Book ID"/></div>
+          <button class="btn btn-primary" onclick="searchBook()">🔍 Search</button>
+        </div>
+      </div>
+      <div id="search-result"></div>
+    </div>
+
+    <!-- SORT -->
+    <div class="page" id="page-sort">
+      <div class="page-title">Sort Books — Bubble Sort</div>
+      <div class="page-desc">Applies Bubble Sort algorithm on linked list nodes by book title.</div>
+      <div class="card">
+        <button class="btn btn-gold" onclick="sortBooks()">🔤 Run Bubble Sort & Display</button>
+      </div>
+      <div id="sort-result"></div>
+    </div>
+
+    <!-- ISSUE -->
+    <div class="page" id="page-issue">
+      <div class="page-title">Issue Book</div>
+      <div class="page-desc">Issues book to student. If already issued, enqueues student to waitlist Queue.</div>
+      <div class="card">
+        <h3>Issue Details</h3>
+        <div class="form-row" style="max-width:460px;">
+          <div class="field"><label>Book ID</label>      <input type="number" id="i-id"  placeholder="Book ID"/></div>
+          <div class="field"><label>Student Name</label> <input type="text"   id="i-stu" placeholder="Student name"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="issueBook()">📤 Issue / Join Waitlist</button>
+      </div>
+    </div>
+
+    <!-- RETURN -->
+    <div class="page" id="page-return">
+      <div class="page-title">Return Book</div>
+      <div class="page-desc">Returns book. Auto-issues to next student in waitlist Queue if any.</div>
+      <div class="card">
+        <h3>Return by Book ID</h3>
+        <div style="display:flex;gap:.75rem;align-items:flex-end;max-width:320px;">
+          <div class="field" style="flex:1;margin:0;"><label>Book ID</label><input type="number" id="r-id" placeholder="Book ID"/></div>
+          <button class="btn btn-primary" onclick="returnBook()">📥 Return</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATE -->
+    <div class="page" id="page-update">
+      <div class="page-title">Update Book</div>
+      <div class="page-desc">Update title and author for an existing book node.</div>
+      <div class="card">
+        <h3>Update Details</h3>
+        <div class="form-row three">
+          <div class="field"><label>Book ID</label>    <input type="number" id="u-id"     placeholder="Book ID"/></div>
+          <div class="field"><label>New Title</label>  <input type="text"   id="u-title"  placeholder="New title"/></div>
+          <div class="field"><label>New Author</label> <input type="text"   id="u-author" placeholder="New author"/></div>
+        </div>
+        <button class="btn btn-gold" onclick="updateBook()">✏️ Update Book</button>
+      </div>
+    </div>
+
+    <!-- REMOVE -->
+    <div class="page" id="page-remove">
+      <div class="page-title">Remove Book</div>
+      <div class="page-desc">Removes a node from the linked list by Book ID.</div>
+      <div class="card">
+        <h3>Remove by Book ID</h3>
+        <div style="display:flex;gap:.75rem;align-items:flex-end;max-width:280px;">
+          <div class="field" style="flex:1;margin:0;"><label>Book ID</label><input type="number" id="d-id" placeholder="Book ID"/></div>
+          <button class="btn btn-danger" onclick="removeBook()">🗑️ Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="page" id="page-stats">
+      <div class="page-title">Library Statistics</div>
+      <div class="page-desc">Live count from the Java backend.</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="num num-total"  id="st-t">–</div><div class="lbl">Total Books</div></div>
+        <div class="stat-card"><div class="num num-avail"  id="st-a">–</div><div class="lbl">Available</div></div>
+        <div class="stat-card"><div class="num num-issued" id="st-i">–</div><div class="lbl">Issued</div></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-title">Transaction History</div>
+      <div class="page-desc">LIFO Stack — most recent entry shown first.</div>
+      <div class="card">
+        <h3>History Stack</h3>
+        <div id="history-list" class="stack-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- WAITLIST MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h3 id="m-title">Book Already Issued</h3>
+    <p id="m-msg">This book is currently checked out. Enter student name to join the waitlist Queue.</p>
+    <div class="field"><label>Student Name</label><input type="text" id="m-stu" placeholder="Student name"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold"  onclick="joinWaitlist()">Join Waitlist Queue</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+  // ════════════════════════════════════════════
+  // API BASE URL — points to Java Spring Boot
+  // ════════════════════════════════════════════
+  const API = 'http://localhost:8080/api';
+
+  // ── Generic fetch wrapper ────────────────────
+  async function api(method, path, body = null) {
+    try {
+      const opts = {
+        method,
+        headers: { 'Content-Type': 'application/json' }
+      };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(API + path, opts);
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = text; }
+      return { ok: res.ok, status: res.status, data };
+    } catch (e) {
+      // Backend not running
+      document.getElementById('server-bar').classList.add('show');
+      return { ok: false, data: 'Cannot connect to Java backend.' };
+    }
+  }
+
+  // ── Navigation ───────────────────────────────
+  let current = 'add';
+  function go(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+    current = page;
+    onPageLoad(page);
+  }
+
+  async function onPageLoad(page) {
+    if (page === 'display') await loadAllBooks();
+    if (page === 'stats')   await loadStats();
+    if (page === 'history') await loadHistory();
+    await loadHeaderStats();
+  }
+
+  // ════════════════════════════════════════════
+  // API CALLS — each function calls Java backend
+  // ════════════════════════════════════════════
+
+  // ADD BOOK → POST /api/books
+  async function addBook() {
+    const id     = parseInt(document.getElementById('a-id').value);
+    const title  = document.getElementById('a-title').value.trim();
+    const author = document.getElementById('a-author').value.trim();
+    if (!id || !title || !author) return toast('Fill all fields.', 'error');
+
+    const r = await api('POST', '/books', { bookId: id, title, author });
+    if (r.ok) {
+      toast(r.data, 'success');
+      document.getElementById('a-id').value = '';
+      document.getElementById('a-title').value = '';
+      document.getElementById('a-author').value = '';
+      await loadHeaderStats();
+    } else toast(r.data, 'error');
+  }
+
+  // ALL BOOKS → GET /api/books
+  async function loadAllBooks() {
+    const wrap = document.getElementById('all-books-wrap');
+    wrap.innerHTML = loadingHTML();
+    const r = await api('GET', '/books');
+    if (!r.ok) { wrap.innerHTML = errorHTML(); return; }
+    wrap.innerHTML = renderTable(r.data);
+  }
+
+  // SEARCH → GET /api/books/{id}
+  async function searchBook() {
+    const id = parseInt(document.getElementById('s-id').value);
+    if (!id) return toast('Enter a Book ID.', 'error');
+    const el = document.getElementById('search-result');
+    el.innerHTML = `<div class="card">${loadingHTML()}</div>`;
+    const r = await api('GET', '/books/' + id);
+    if (r.status === 404 || !r.ok) {
+      el.innerHTML = `<div class="card"><div class="empty"><span class="ico">❌</span><p>No book found with ID <strong>${id}</strong>.</p></div></div>`;
+      return;
+    }
+    const b = r.data;
+    const wl = b.waitlist && b.waitlist.length ? b.waitlist.map((s,i) => `<span class="badge badge-wait">${i+1}. ${s}</span> `).join('') : '<span style="color:var(--mid)">None</span>';
+    el.innerHTML = `<div class="card">
+      <h3>Book Found</h3>
+      <div class="table-wrap"><table><tbody>
+        <tr><td><strong>Book ID</strong></td><td><span class="id-chip">${b.bookId}</span></td></tr>
+        <tr><td><strong>Title</strong></td>  <td>${b.title}</td></tr>
+        <tr><td><strong>Author</strong></td> <td>${b.author}</td></tr>
+        <tr><td><strong>Status</strong></td> <td><span class="badge ${b.issued ? 'badge-issued' : 'badge-avail'}">${b.issued ? 'Issued' : 'Available'}</span></td></tr>
+        <tr><td><strong>Waitlist</strong></td><td>${wl}</td></tr>
+      </tbody></table></div>
+    </div>`;
+  }
+
+  // SORT → GET /api/books/sort
+  async function sortBooks() {
+    const el = document.getElementById('sort-result');
+    el.innerHTML = `<div class="card">${loadingHTML()}</div>`;
+    const r = await api('GET', '/books/sort');
+    if (!r.ok) { el.innerHTML = errorHTML(); return; }
+    toast('Catalog sorted alphabetically via Bubble Sort!', 'success');
+    el.innerHTML = `<div class="card" style="padding:0;overflow:hidden;">${renderTable(r.data)}</div>`;
+  }
+
+  // ISSUE → POST /api/books/{id}/issue
+  async function issueBook() {
+    const id  = parseInt(document.getElementById('i-id').value);
+    const stu = document.getElementById('i-stu').value.trim();
+    if (!id) return toast('Enter a Book ID.', 'error');
+
+    const r = await api('POST', `/books/${id}/issue`, { studentName: stu });
+    if (!r.ok) { toast(r.data, 'error'); return; }
+
+    if (r.data.startsWith('ALREADY_ISSUED')) {
+      // Show modal for waitlist
+      pendingIssueId = id;
+      document.getElementById('m-title').textContent = `Book ID ${id} is already issued`;
+      document.getElementById('m-stu').value = stu;
+      document.getElementById('modal-bg').classList.add('open');
+      return;
+    }
+    const type = r.data.startsWith('WAITLIST') ? 'warn' : 'success';
+    toast(r.data.replace(/^WAITLIST:\s*/, ''), type);
+    document.getElementById('i-id').value = '';
+    document.getElementById('i-stu').value = '';
+    await loadHeaderStats();
+  }
+
+  // RETURN → POST /api/books/{id}/return
+  async function returnBook() {
+    const id = parseInt(document.getElementById('r-id').value);
+    if (!id) return toast('Enter a Book ID.', 'error');
+    const r = await api('POST', `/books/${id}/return`);
+    if (!r.ok) { toast(r.data, 'error'); return; }
+    const type = r.data.startsWith('QUEUE_ISSUED') ? 'info' : 'success';
+    toast(r.data.replace(/^QUEUE_ISSUED:\s*/, ''), type);
+    document.getElementById('r-id').value = '';
+    await loadHeaderStats();
+  }
+
+  // UPDATE → PUT /api/books/{id}
+  async function updateBook() {
+    const id     = parseInt(document.getElementById('u-id').value);
+    const title  = document.getElementById('u-title').value.trim();
+    const author = document.getElementById('u-author').value.trim();
+    if (!id || !title || !author) return toast('Fill all fields.', 'error');
+    const r = await api('PUT', `/books/${id}`, { title, author });
+    if (r.ok) {
+      toast(r.data, 'success');
+      document.getElementById('u-id').value = '';
+      document.getElementById('u-title').value = '';
+      document.getElementById('u-author').value = '';
+    } else toast(r.data, 'error');
+  }
+
+  // REMOVE → DELETE /api/books/{id}
+  async function removeBook() {
+    const id = parseInt(document.getElementById('d-id').value);
+    if (!id) return toast('Enter a Book ID.', 'error');
+    if (!confirm(`Remove book ID ${id}? This cannot be undone.`)) return;
+    const r = await api('DELETE', `/books/${id}`);
+    if (r.ok) {
+      toast(r.data, 'success');
+      document.getElementById('d-id').value = '';
+      await loadHeaderStats();
+    } else toast(r.data, 'error');
+  }
+
+  // STATS → GET /api/statistics
+  async function loadStats() {
+    const r = await api('GET', '/statistics');
+    if (!r.ok) return;
+    document.getElementById('st-t').textContent = r.data.total;
+    document.getElementById('st-a').textContent = r.data.available;
+    document.getElementById('st-i').textContent = r.data.issued;
+  }
+
+  // HISTORY → GET /api/history
+  async function loadHistory() {
+    const el = document.getElementById('history-list');
+    el.innerHTML = loadingHTML();
+    const r = await api('GET', '/history');
+    if (!r.ok) { el.innerHTML = errorHTML(); return; }
+    if (!r.data.length) {
+      el.innerHTML = `<div class="empty"><span class="ico">📭</span><p>No transactions yet.</p></div>`;
+      return;
+    }
+    el.innerHTML = r.data.map(log =>
+      `<div class="stack-item"><span class="arrow">→</span><span>${log}</span></div>`
+    ).join('');
+  }
+
+  // HEADER STATS
+  async function loadHeaderStats() {
+    const r = await api('GET', '/statistics');
+    if (!r.ok) return;
+    document.getElementById('hdr-t').textContent = r.data.total;
+    document.getElementById('hdr-a').textContent = r.data.available;
+    document.getElementById('hdr-i').textContent = r.data.issued;
+    document.getElementById('server-bar').classList.remove('show');
+  }
+
+  // ── Table renderer ───────────────────────────
+  function renderTable(books) {
+    if (!books || !books.length)
+      return `<div class="empty"><span class="ico">📭</span><p>No books in catalog. Add one!</p></div>`;
+    const rows = books.map(b => {
+      const wl = b.waitlist && b.waitlist.length
+        ? `<div class="wl-preview">⏳ Waitlist (${b.waitlist.length}): ${b.waitlist.join(', ')}</div>` : '';
+      return `<tr>
+        <td><span class="id-chip">${b.bookId}</span></td>
+        <td><strong>${b.title}</strong></td>
+        <td>${b.author}</td>
+        <td>
+          <span class="badge ${b.issued ? 'badge-issued' : 'badge-avail'}">${b.issued ? 'Issued' : 'Available'}</span>
+          ${wl}
+        </td>
+        <td>
+          <div class="action-group">
+            <button class="btn btn-ghost btn-sm" onclick="quickIssue(${b.bookId}, '${b.title}', ${b.issued})">📤</button>
+            <button class="btn btn-ghost btn-sm" onclick="quickReturn(${b.bookId})">📥</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+    return `<div class="table-wrap"><table>
+      <thead><tr>
+        <th>ID</th><th>Title</th><th>Author</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  }
+
+  // ── Quick actions from table ─────────────────
+  let pendingIssueId = null;
+
+  async function quickIssue(id, title, issued) {
+    if (issued) {
+      pendingIssueId = id;
+      document.getElementById('m-title').textContent = `"${title}" is already issued`;
+      document.getElementById('m-stu').value = '';
+      document.getElementById('modal-bg').classList.add('open');
+    } else {
+      const r = await api('POST', `/books/${id}/issue`, { studentName: '' });
+      if (r.ok) { toast(`Book ID ${id} issued!`, 'success'); await loadAllBooks(); await loadHeaderStats(); }
+      else toast(r.data, 'error');
+    }
+  }
+
+  async function quickReturn(id) {
+    const r = await api('POST', `/books/${id}/return`);
+    if (r.ok) {
+      const type = r.data.startsWith('QUEUE_ISSUED') ? 'info' : 'success';
+      toast(r.data.replace(/^QUEUE_ISSUED:\s*/, ''), type);
+      await loadAllBooks();
+      await loadHeaderStats();
+    } else toast(r.data, 'error');
+  }
+
+  // ── Waitlist Modal ───────────────────────────
+  async function joinWaitlist() {
+    const name = document.getElementById('m-stu').value.trim();
+    if (!name) return toast('Enter student name.', 'error');
+    const r = await api('POST', `/books/${pendingIssueId}/issue`, { studentName: name });
+    if (r.ok) {
+      toast(r.data.replace(/^WAITLIST:\s*/, ''), 'warn');
+      closeModal();
+      if (current === 'display') await loadAllBooks();
+      document.getElementById('i-id').value = '';
+      document.getElementById('i-stu').value = '';
+    } else toast(r.data, 'error');
+  }
+  function closeModal() {
+    document.getElementById('modal-bg').classList.remove('open');
+    pendingIssueId = null;
+  }
+
+  // ── UI Helpers ───────────────────────────────
+  function loadingHTML() {
+    return `<div class="loading"><div class="spinner"></div> Loading from Java backend...</div>`;
+  }
+  function errorHTML() {
+    return `<div class="empty"><span class="ico">⚠️</span><p>Could not reach Java backend. Is Spring Boot running?</p></div>`;
+  }
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: '✅', error: '❌', warn: '⚠️', info: 'ℹ️' };
+    el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  // Initial header load
+  loadHeaderStats();
+</script>
+</body>
+</html>
